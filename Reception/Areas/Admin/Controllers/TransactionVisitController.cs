@@ -16,7 +16,6 @@ namespace Reception.Controllers
             _context = context;
         }
 
-        // شاشة الاستقبال
         public IActionResult Index()
         {
             var visits = _context.TransactionVisit
@@ -28,7 +27,6 @@ namespace Reception.Controllers
             return View(visits);
         }
 
-        // تفاصيل زيارة
         public IActionResult Details(int id)
         {
             var visit = _context.TransactionVisit

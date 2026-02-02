@@ -27,7 +27,6 @@ namespace Reception.Controllers
             return PartialView("_List", payments);
         }
 
-        // إضافة دفعة
         [HttpPost]
         public IActionResult Create(TransactionVisitPaymentViewModel model)
         {
