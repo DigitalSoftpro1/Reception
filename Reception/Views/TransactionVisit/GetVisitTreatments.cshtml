@@ -1,0 +1,256 @@
+﻿@model List<Reception.Models.VisitTreatment>
+@{
+    ViewData["Title"] = "Visit Treatments";
+    var visit = ViewBag.Visit as Reception.Models.Visit;
+}
+
+
+<div class="container-fluid">
+    @Html.AntiForgeryToken()
+
+    <div class="visit-header">
+        <div class="visit-info">
+            <label>Visit No</label>
+            <input type="text" value="@(visit?.Id ?? 0)" readonly>
+        </div>
+        <div class="visit-info">
+            <label>Visit Date</label>
+            <input type="text" value="@(visit?.VisitDate.ToString("dd/MM/yyyy HH:mm") ?? "")" readonly>
+        </div>
+
+       
+    </div>
+        <a asp-action="Visits" class="btn btn-secondary float-end">
+            <i class="bi bi-arrow-left"></i> Back to Visits
+        </a>
+    </div>
+
+    <div class="mb-3">
+        <label style="font-weight: bold;">Patient</label>
+        <input type="text" class="form-control" style="max-width: 400px; display: inline-block; margin-right: 20px;"
+               value="@(visit?.PatientName ?? "")" readonly>
+    </div>
+
+   
+<table class="treatments-table">
+    <thead>
+        <tr>
+            <th>Treatment Name</th>
+            <th>Org. Price</th>
+            <th>Pat. Price</th>
+            <th>Refused</th>
+            <th>Action</th> <!-- ✅ عمود جديد -->
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td style="text-align: right; padding-right: 20px;">
+                        @(item.Treatment?.Name ?? "N/A")
+                    </td>
+                    <td>@item.PatientPrice.ToString("0.000")</td>
+                    <td>@item.PatientPrice.ToString("0.000")</td>
+                    <td>
+                        <input type="checkbox" data-treatment-id="@item.Id">
+                    </td>
+                    <td>
+                        <a asp-controller="Billing"
+                           asp-action="Payments"
+                           asp-route-visitId="@(visit?.Id ?? 0)"
+                           asp-route-treatmentId="@item.Id"
+                           asp-route-treatmentName="@(item.Treatment?.Name ?? "")"
+                           asp-route-price="@item.PatientPrice"
+                           class="btn btn-sm btn-success"
+                           title="Make Payment">
+                            <i class="bi bi-credit-card"></i> Pay
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" class="text-center">No treatments added yet</td> <!-- ✅ عدّل colspan من 4 إلى 5 -->
+            </tr>
+        }
+    </tbody>
+</table>
+
+    <div class="action-buttons">
+        <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addTreatmentModal">
+            Add Treatments
+        </button>
+        <button class="btn-delete" onclick="deleteSelected()">
+            Delete Treatments
+        </button>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addTreatmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddVisitTreatment" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Treatment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="VisitId" value="@(visit?.Id ?? 0)">
+
+                    <div class="mb-3">
+                        <label class="form-label">Select Clinic</label>
+                        <select class="form-select" id="TreatmentClinicId" onchange="loadTreatmentsForClinic(this.value)">
+                            <option value="">-- Select Clinic --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Treatment</label>
+                        <select class="form-select" id="TreatmentId" name="TreatmentId" required>
+                            <option value="">-- Select Clinic First --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Patient Price</label>
+                        <input type="number" step="0.001" class="form-control" id="PatientPrice" name="PatientPrice" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Treatment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function deleteSelected() {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+
+        if (checkboxes.length === 0) {
+            alert('Please select treatments to delete');
+            return;
+        }
+
+        if (!confirm(`Delete ${checkboxes.length} treatment(s)?`)) {
+            return;
+        }
+
+        const treatmentIds = [];
+        checkboxes.forEach(checkbox => {
+            const treatmentId = checkbox.getAttribute('data-treatment-id');
+            if (treatmentId) {
+                treatmentIds.push(parseInt(treatmentId));
+            }
+        });
+
+        console.log('Deleting IDs:', treatmentIds);
+
+        const url = '@Url.Action("DeleteVisitTreatments", "TransactionVisit")';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(treatmentIds)
+        })
+            .then(response => {
+                console.log('Status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response:', data);
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            });
+    }
+    function loadTreatmentsForClinic(clinicId) {
+        const treatmentSelect = document.getElementById('TreatmentId');
+
+        if (!clinicId) {
+            treatmentSelect.innerHTML = '<option value="">-- Select Clinic First --</option>';
+            return;
+        }
+
+        treatmentSelect.innerHTML = '<option value="">Loading...</option>';
+
+        fetch(`/Clinic/GetTreatments?clinicId=${clinicId}`)
+            .then(response => response.json())
+            .then(treatments => {
+                let options = '<option value="">-- Select Treatment --</option>';
+
+                treatments.forEach(treatment => {
+                    options += `<option value="${treatment.id}" data-price="${treatment.defaultPrice}">
+                                    ${treatment.name} - ${treatment.defaultPrice ? treatment.defaultPrice.toFixed(3) : '0.000'}
+                                </option>`;
+                });
+
+                treatmentSelect.innerHTML = options;
+
+                treatmentSelect.onchange = function () {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const price = selectedOption.getAttribute('data-price');
+                    if (price) {
+                        document.getElementById('PatientPrice').value = parseFloat(price).toFixed(3);
+                    }
+                };
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                treatmentSelect.innerHTML = '<option value="">Error loading treatments</option>';
+            });
+    }
+
+    function loadClinics() {
+        const clinicSelect = document.getElementById('TreatmentClinicId');
+
+        if (!clinicSelect) return;
+
+        fetch('/TransactionVisit/GetAllClinics')
+            .then(response => response.json())
+            .then(clinics => {
+                let options = '<option value="">-- Select Clinic --</option>';
+
+                clinics.forEach(clinic => {
+                    options += `<option value="${clinic.id}">${clinic.name}</option>`;
+                });
+
+                clinicSelect.innerHTML = options;
+            })
+            .catch(error => {
+                console.error('Error loading clinics:', error);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadClinics();
+
+        const paymentTypeRadios = document.querySelectorAll('input[name="paymentType"]');
+        const insuranceSelect = document.getElementById('insuranceSelect');
+
+        paymentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                insuranceSelect.disabled = (this.value !== 'Insurance');
+            });
+        });
+    });
+</script>

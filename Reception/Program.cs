@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Reception.Models;
-using Reception.Data.Intercptors;
+using Reception.IService;
+using Reception.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
@@ -10,7 +11,9 @@ builder.Services.AddDbContext<ReceptionDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+  builder.Services.AddScoped<IServices, Services>();
+builder.Services.AddScoped<IBillingServices, BillingServices>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -27,8 +30,11 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Clinic}/{action=Index}/{id?}");
+
+
 
 app.Run();

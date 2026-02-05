@@ -1,0 +1,149 @@
+﻿@model List<Reception.Models.Payment>
+
+@{
+    ViewData["Title"] = "Payments - " + ViewBag.TreatmentName;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h3 class="mb-4">
+                <i class="bi bi-receipt"></i> Payment Details - @ViewBag.TreatmentName
+            </h3>
+
+            <!-- Invoice Summary Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Invoice Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Invoice Total:</strong></td>
+                            <td class="text-end">@ViewBag.InvoiceTotal JOD</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Discount:</strong></td>
+                            <td class="text-end">@ViewBag.Discount JOD</td>
+                        </tr>
+                        <tr class="table-active">
+                            <td><strong>Amount To Pay:</strong></td>
+                            <td class="text-end"><strong>@ViewBag.AmountToPay JOD</strong></td>
+                        </tr>
+                        <tr class="table-success">
+                            <td><strong>Total Paid:</strong></td>
+                            <td class="text-end text-success"><strong>@ViewBag.TotalPaid JOD</strong></td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td><strong>Remaining:</strong></td>
+                            <td class="text-end text-danger"><strong>@ViewBag.Remain JOD</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payments History -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Payment History</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Paid Date</th>
+                                    <th>Paid Type</th>
+                                    <th>Paid Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <tbody>
+                                    @foreach (var payment in Model)
+                                    {
+                                    <tr>
+                                        <td>@payment.PaidDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <span class="badge bg-secondary">@(payment.PaidType ?? "N/A")</span>
+                                        </td>
+                                        <td class="text-success">
+                                            <strong>@((payment.PaidValue ?? 0).ToString("0.000")) JOD</strong>
+                                        </td>
+                                    </tr>
+                                    }
+                            </tbody>                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center">
+                            <i class="bi bi-info-circle"></i> No payments recorded yet
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Payment Form -->
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Add New Payment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddPayment" method="post">
+                        <input type="hidden" name="IdInvoice" value="@ViewBag.InvoiceId" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Payment Type</label>
+                            <select name="PaidType" class="form-select" required>
+                                <option value="">-- Select Type --</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Check">Check</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Payment Amount</label>
+                            <input type="number"
+                                   name="PaidValue"
+                                   class="form-control"
+                                   step="0.001"
+                                   max="@ViewBag.Remain"
+                                   placeholder="Enter amount"
+                                   required />
+                            <small class="text-muted">
+                                Max: @ViewBag.Remain JOD
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Payment Date</label>
+                            <input type="datetime-local"
+                                   name="PaidDate"
+                                   class="form-control"
+                                   value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
+                                   required />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Record Payment
+                            </button>
+                            <a asp-action="Index" asp-controller="Visit" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Treatments
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    

@@ -1,0 +1,250 @@
+﻿@model Reception.Models.VisitsViewModel
+
+@{
+    ViewData["Title"] = "Visits";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            <i class="bi bi-clipboard-check"></i> Visits List (@Model.Visits.Count visits)
+        </h4>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVisitModal">
+                <i class="bi bi-plus-circle"></i> Add Visit
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Visit ID</th>
+                        <th>Visit Date</th>
+                        <th>Patient Name</th>
+                        <th>Clinic</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Visits != null && Model.Visits.Any())
+                    {
+                        @foreach (var visit in Model.Visits)
+                        {
+                            <tr>
+                                <td>#@visit.Id </td>
+                                <td>@visit.VisitDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@visit.PatientName</td>
+                                <td>@visit.Clinic?.Name</td>
+                                <td>
+                                    @if (visit.Status == "Completed")
+                                    {
+                                        <span class="badge bg-success">✓ Completed</span>
+                                    }
+                                    else if (visit.Status == "Waiting")
+                                    {
+                                        <span class="badge bg-warning text-dark">⏳ Waiting</span>
+                                    }
+                                    else if (visit.Status == "In Progress")
+                                    {
+                                        <span class="badge bg-info">⚡ In Progress</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@visit.Status</span>
+                                    }
+                                </td>
+                                <td>@(string.IsNullOrEmpty(visit.Notes) ? "-" : visit.Notes)</td>
+                                <td>
+                                    <a asp-action="GetVisitTreatments"
+                                       asp-route-visitId="@visit.Id"
+                                       class="btn btn-info btn-sm">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#addTreatmentModal"
+                                            onclick="setVisitId(@visit.Id, '@visit.PatientName')">
+                                        <i class="bi bi-plus"></i> Add Treatment
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No visits found</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addVisitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="TransactionVisit" asp-action="AddVisit" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Visit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="PatientName" class="form-label">Patient Name</label>
+                        <input type="text" class="form-control" id="PatientName" name="PatientName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ClinicId" class="form-label">Clinic</label>
+                        <select class="form-select" id="ClinicId" name="ClinicId" required>
+                            <option value="">-- Select Clinic --</option>
+                            @foreach (var clinic in Model.Clinics)
+                            {
+                                <option value="@clinic.Id">@clinic.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="VisitDate" class="form-label">Visit Date</label>
+                        <input type="datetime-local" class="form-control" id="VisitDate" name="VisitDate"
+                               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Status" class="form-label">Status</label>
+                        <select class="form-select" id="Status" name="Status" required>
+                            <option value="Waiting" selected>Waiting</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="Notes" name="Notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Visit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addTreatmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddVisitTreatment" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Treatment for <span id="patientNameDisplay"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="VisitId" name="VisitId">
+
+                    <div class="mb-3">
+                        <label for="TreatmentClinicId" class="form-label">Select Clinic First</label>
+                        <select class="form-select" id="TreatmentClinicId" onchange="loadTreatmentsForClinic(this.value)">
+                            <option value="">-- Select Clinic --</option>
+                            @foreach (var clinic in Model.Clinics)
+                            {
+                                <option value="@clinic.Id">@clinic.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TreatmentId" class="form-label">Treatment</label>
+                        <select class="form-select" id="TreatmentId" name="TreatmentId" required>
+                            <option value="">-- Select Clinic First --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="PatientPrice" class="form-label">Patient Price</label>
+                        <input type="number" step="0.01" class="form-control" id="PatientPrice" name="PatientPrice" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Treatment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function loadTreatmentsForClinic(clinicId) {
+        const treatmentSelect = document.getElementById('TreatmentId');
+
+        if (!clinicId) {
+            treatmentSelect.innerHTML = '<option value="">-- Select Clinic First --</option>';
+            return;
+        }
+
+        treatmentSelect.innerHTML = '<option value="">Loading...</option>';
+
+        fetch(`/Clinic/GetTreatments?clinicId=${clinicId}`)
+            .then(response => response.json())
+            .then(treatments => {
+                let options = '<option value="">-- Select Treatment --</option>';
+
+                treatments.forEach(treatment => {
+                    options += `<option value="${treatment.id}" data-price="${treatment.defaultPrice}">
+                                        ${treatment.name} - $${treatment.defaultPrice ? treatment.defaultPrice.toFixed(2) : '0.00'}
+                                    </option>`;
+                });
+
+                treatmentSelect.innerHTML = options;
+
+                treatmentSelect.onchange = function () {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const price = selectedOption.getAttribute('data-price');
+                    if (price) {
+                        document.getElementById('PatientPrice').value = parseFloat(price).toFixed(2);
+                    }
+                };
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                treatmentSelect.innerHTML = '<option value="">Error loading treatments</option>';
+            });
+    }
+
+    function setVisitId(visitId, patientName) {
+        document.getElementById('VisitId').value = visitId;
+        document.getElementById('patientNameDisplay').textContent = patientName;
+        document.getElementById('TreatmentClinicId').value = '';
+        document.getElementById('TreatmentId').innerHTML = '<option value="">-- Select Clinic First --</option>';
+        document.getElementById('PatientPrice').value = '';
+    }
+
+</script>

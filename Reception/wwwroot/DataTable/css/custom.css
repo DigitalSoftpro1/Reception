@@ -1,0 +1,27 @@
+body { padding: 20px; }
+
+.table-container {
+    float: left; /* على يسار الصفحة */
+    width: 50%; 
+    max-height: 300px; 
+    overflow-y: auto; 
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.buttons-container {
+    margin-top: 10px;
+    text-align: left; 
+}
+
+#visitTable, #treatmentTable {
+    width: 100% !important;
+}
+
+/* Hover على الصفوف */
+#visitTable tbody tr:hover, #treatmentTable tbody tr:hover {
+    background-color: #cce5ff; 
+    cursor: pointer; 
+}

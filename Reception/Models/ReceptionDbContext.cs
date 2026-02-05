@@ -8,10 +8,15 @@ namespace Reception.Models
         {
         }
 
-        public virtual DbSet<TransactionVisitTreatment> TransactionVisitTreatment { get; set; }
+        public virtual DbSet<Visit> Visits { get; set; }
+        
+        public virtual DbSet<Payment> Payments { get; set; }
 
-        public virtual DbSet<TransactionVisitPayment> TransactionVisitPayment { get; set; }
+        public virtual DbSet<Invoice> Invoices { get; set; }
+        public virtual DbSet<Treatment> Treatments { get; set; }
+        public virtual DbSet<Clinic> Clinics { get; set; }
 
-        public virtual DbSet<TransactionVisit> TransactionVisit { get; set; }
+
+        public virtual DbSet<VisitTreatment> VisitTreatments { get; set; }
     }
 }

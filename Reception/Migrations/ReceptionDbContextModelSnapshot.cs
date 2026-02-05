@@ -22,7 +22,7 @@ namespace Reception.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Reception.Models.TransactionVisit", b =>
+            modelBuilder.Entity("Reception.Models.Clinic", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -30,67 +30,21 @@ namespace Reception.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("AmountToPay")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ClinicName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatedId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("EditDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("EditId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("InvoiceTotal")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PatientName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Remain")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalPaid")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("VisitDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("VisitNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VisitType")
-                        .IsRequired()
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransactionVisit");
+                    b.ToTable("Clinics");
                 });
 
-            modelBuilder.Entity("Reception.Models.TransactionVisitPayment", b =>
+            modelBuilder.Entity("Reception.Models.Invoice", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -98,45 +52,74 @@ namespace Reception.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal?>("AmmountToPay")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedId")
+                    b.Property<decimal?>("Discount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("InvoiceTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("Remain")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("TotalPaid")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("TreatmentId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("EditDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int?>("VisitId")
+                        .HasColumnType("int");
 
-                    b.Property<int?>("EditId")
+                    b.HasKey("Id");
+
+                    b.HasIndex("VisitId");
+
+                    b.ToTable("Invoices");
+                });
+
+            modelBuilder.Entity("Reception.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("IdInvoice")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("InvoiceId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("PaidDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PaidType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("PaidValue")
+                    b.Property<decimal?>("PaidValue")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TransactionVisitId")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TransactionVisitId");
+                    b.HasIndex("InvoiceId");
 
-                    b.ToTable("TransactionVisitPayment");
+                    b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Reception.Models.TransactionVisitTreatment", b =>
+            modelBuilder.Entity("Reception.Models.Treatment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -144,74 +127,158 @@ namespace Reception.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("EditDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("EditId")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("DefaultPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsRefused")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("OriginalPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PatientPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TransactionVisitId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TreatmentName")
-                        .IsRequired()
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TransactionVisitId");
+                    b.HasIndex("ClinicId");
 
-                    b.ToTable("TransactionVisitTreatment");
+                    b.ToTable("Treatments");
                 });
 
-            modelBuilder.Entity("Reception.Models.TransactionVisitPayment", b =>
+            modelBuilder.Entity("Reception.Models.Visit", b =>
                 {
-                    b.HasOne("Reception.Models.TransactionVisit", "TransactionVisit")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ClinicId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClinicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatientName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClinicId");
+
+                    b.ToTable("Visits");
+                });
+
+            modelBuilder.Entity("Reception.Models.VisitTreatment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("PatientPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TreatmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VisitId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TreatmentId");
+
+                    b.HasIndex("VisitId");
+
+                    b.ToTable("VisitTreatments");
+                });
+
+            modelBuilder.Entity("Reception.Models.Invoice", b =>
+                {
+                    b.HasOne("Reception.Models.Visit", "Visit")
+                        .WithMany()
+                        .HasForeignKey("VisitId");
+
+                    b.Navigation("Visit");
+                });
+
+            modelBuilder.Entity("Reception.Models.Payment", b =>
+                {
+                    b.HasOne("Reception.Models.Invoice", "Invoice")
                         .WithMany("Payments")
-                        .HasForeignKey("TransactionVisitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("InvoiceId");
 
-                    b.Navigation("TransactionVisit");
+                    b.Navigation("Invoice");
                 });
 
-            modelBuilder.Entity("Reception.Models.TransactionVisitTreatment", b =>
+            modelBuilder.Entity("Reception.Models.Treatment", b =>
                 {
-                    b.HasOne("Reception.Models.TransactionVisit", "TransactionVisit")
-                        .WithMany("Treatments")
-                        .HasForeignKey("TransactionVisitId")
+                    b.HasOne("Reception.Models.Clinic", "clinic")
+                        .WithMany("Treatment")
+                        .HasForeignKey("ClinicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TransactionVisit");
+                    b.Navigation("clinic");
                 });
 
-            modelBuilder.Entity("Reception.Models.TransactionVisit", b =>
+            modelBuilder.Entity("Reception.Models.Visit", b =>
+                {
+                    b.HasOne("Reception.Models.Clinic", "Clinic")
+                        .WithMany()
+                        .HasForeignKey("ClinicId");
+
+                    b.Navigation("Clinic");
+                });
+
+            modelBuilder.Entity("Reception.Models.VisitTreatment", b =>
+                {
+                    b.HasOne("Reception.Models.Treatment", "Treatment")
+                        .WithMany()
+                        .HasForeignKey("TreatmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Reception.Models.Visit", "Visit")
+                        .WithMany()
+                        .HasForeignKey("VisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Treatment");
+
+                    b.Navigation("Visit");
+                });
+
+            modelBuilder.Entity("Reception.Models.Clinic", b =>
+                {
+                    b.Navigation("Treatment");
+                });
+
+            modelBuilder.Entity("Reception.Models.Invoice", b =>
                 {
                     b.Navigation("Payments");
-
-                    b.Navigation("Treatments");
                 });
 #pragma warning restore 612, 618
         }
