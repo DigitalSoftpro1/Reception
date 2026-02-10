@@ -1,0 +1,121 @@
+﻿@model List<Reception.Models.Invoice>
+
+    @{
+    ViewData["Title"] = "Print";
+    }
+
+    <link href="../../Reception/Views/Billing/Print.css" rel="stylesheet" />
+
+    <div class="container mt-4">
+
+        <!-- ================= MEDICAL INVOICE ================= -->
+        <div id="printableInvoice" class="medical-invoice">
+
+            <!-- HEADER -->
+            <div class="invoice-header">
+                <div>
+                    <h2>Medical Invoice</h2>
+                    <p class="clinic-name">Clinic / Medical Center Name</p>
+                    <p class="clinic-info">Address • Phone • Email</p>
+                </div>
+                <div class="invoice-meta">
+                    <p><strong>Invoice Date:</strong> @DateTime.Now.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Treatment:</strong> @ViewBag.TreatmentName</p>
+                    <p><strong>Invoice #:</strong> @ViewBag.InvoiceId</p>
+                </div>
+            </div>
+
+            <hr />
+
+            <!-- PATIENT INFO -->
+            <div class="patient-info">
+                <p><strong>Patient Name:</strong> @ViewBag.PatientName</p>
+                <p><strong>Visit ID:</strong> @ViewBag.VisitId</p>
+            </div>
+
+            <!-- FINANCIAL TABLE -->
+            <table class="invoice-table">
+                <tbody>
+                    <tr>
+                        <td>Invoice Total</td>
+                        <td class="text-end">
+                            <input type="number"
+                                   id="invoiceTotal"
+                                   value="@ViewBag.InvoiceTotal"
+                                   class="editable-field"
+                                   onchange="calculateRemaining()" />
+                            <span class="print-value">@ViewBag.InvoiceTotal</span> JOD
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Discount</td>
+                        <td class="text-end">
+                            <input type="number"
+                                   id="discount"
+                                   value="@ViewBag.Discount"
+                                   class="editable-field"
+                                   onchange="calculateRemaining()" />
+                            <span class="print-value">@ViewBag.Discount</span> JOD
+                        </td>
+                    </tr>
+
+                    <tr class="highlight">
+                        <td>Amount To Pay</td>
+                        <td class="text-end">
+                            <strong id="amountToPay">@ViewBag.AmountToPay JOD</strong>
+                        </td>
+                    </tr>
+
+                    <tr class="paid">
+                        <td>Total Paid</td>
+                        <td class="text-end">
+                            <strong id="totalPaid">@ViewBag.TotalPaid JOD</strong>
+                        </td>
+                    </tr>
+
+                    <tr class="remaining">
+                        <td>Remaining</td>
+                        <td class="text-end">
+                            <strong id="remaining">@ViewBag.Remain JOD</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- FOOTER -->
+            <div class="invoice-footer">
+                <p><strong>Doctor / Accountant Signature:</strong> _____________________</p>
+                <p class="note">
+                    This is an official medical invoice generated electronically.<br />
+                    No signature is required.
+                </p>
+                <p class="printed-date">
+                    Printed on: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                </p>
+            </div>
+        </div>
+</div>
+        <script>
+            function calculateRemaining() {
+
+                const invoiceTotal = parseFloat(document.getElementById('invoiceTotal')?.value) || 0;
+                const discount = parseFloat(document.getElementById('discount')?.value) || 0;
+
+                const totalPaidText = document.getElementById('totalPaid').textContent;
+                const totalPaid = parseFloat(totalPaidText.replace(/[^0-9.-]/g, '')) || 0;
+
+                const amountToPay = invoiceTotal - discount;
+                document.getElementById('amountToPay').textContent =
+                    amountToPay.toFixed(3) + ' JOD';
+
+                const remaining = amountToPay - totalPaid;
+                document.getElementById('remaining').textContent =
+                    remaining.toFixed(3) + ' JOD';
+            }
+
+            function printInvoice() {
+                calculateRemaining();
+                window.print();
+            }
+        </script>

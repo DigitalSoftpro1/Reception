@@ -4,90 +4,144 @@
     ViewData["Title"] = "Payments - " + ViewBag.TreatmentName;
 }
 
-<div class="container mt-4">
+
+<div class="container-fluid mt-4 " id="showprint">
     <div class="row">
-        <div class="col-md-8">
-            <h3 class="mb-4">
-                <i class="bi bi-receipt"></i> Payment Details - @ViewBag.TreatmentName
-            </h3>
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0">
+                    <i class="bi bi-receipt"></i> Payment Details - @ViewBag.TreatmentName
+                </h3>
+                <button onclick="window.history.back()" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+            </div>
 
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Invoice Summary</h5>
-                </div>
-                <div class="card-body">
-                    <form asp-action="UpdateInvoiceDetails" method="post">
-                        <input type="hidden" name="InvoiceId" value="@ViewBag.InvoiceId" />
-                        <input type="hidden" name="VisitId" value="@ViewBag.VisitId" />
-                        <input type="hidden" name="TreatmentId" value="@ViewBag.TreatmentId" />
-                        <input type="hidden" name="TreatmentName" value="@ViewBag.TreatmentName" />
-
-                        <table class="table table-borderless">
-                            <tr>
-                                <td><strong>Invoice Total:</strong></td>
-                                <td class="text-end">
-                                    <input type="number"
-                                           id="invoiceTotal"
-                                           name="InvoiceTotal"
-                                           class="form-control text-end"
-                                           value="@ViewBag.InvoiceTotal"
-                                           step="0.001"
-                                           onchange="calculateRemaining()"
-                                           style="max-width: 200px; display: inline-block;" />
-                                    <span>JOD</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Discount:</strong></td>
-                                <td class="text-end">
-                                    <input type="number"
-                                           id="discount"
-                                           name="Discount"
-                                           class="form-control text-end"
-                                           value="@ViewBag.Discount"
-                                           step="0.001"
-                                           min="0"
-                                           onchange="calculateRemaining()"
-                                           style="max-width: 200px; display: inline-block;" />
-                                    <span>JOD</span>
-                                </td>
-                            </tr>
-                            <tr class="table-active">
-                                <td><strong>Amount To Pay:</strong></td>
-                                <td class="text-end">
-                                    <strong id="amountToPay">@ViewBag.AmountToPay JOD</strong>
-                                </td>
-                            </tr>
-                            <tr class="table-success">
-                                <td><strong>Total Paid:</strong></td>
-                                <td class="text-end text-success">
-                                    <strong id="totalPaid">@ViewBag.TotalPaid JOD</strong>
-                                </td>
-                            </tr>
-                            <tr class="table-danger">
-                                <td><strong>Remaining:</strong></td>
-                                <td class="text-end text-danger">
-                                    <strong id="remaining">@ViewBag.Remain JOD</strong>
-                                </td>
-                            </tr>
-                        </table>
-
-                        <div class="text-end mt-3">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Update Invoice
+            <div class="row">
+                <!-- Invoice Summary Card -->
+                <div class="col-md-6">
+                    <div class="card mb-4" id="printableInvoice">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Invoice Summary</h5>
+                            <button type="button" onclick="printInvoiceTable()" class="btn btn-primary mb-3">
+                                🖨 Print Table
                             </button>
                         </div>
-                    </form>
+                        <div class="card-body">
+                            <input type="hidden" id="invoiceId" value="@ViewBag.InvoiceId" />
+                            <input type="hidden" id="visitId" value="@ViewBag.VisitId" />
+                            <input type="hidden" id="treatmentId" value="@ViewBag.TreatmentId" />
+                            <input type="hidden" id="invoiceTotal" value="@ViewBag.InvoiceTotal" />
+
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Invoice Total:</strong></td>
+                                    <td class="text-end">
+                                        <span id="invoiceTotalDisplay">@ViewBag.InvoiceTotal JOD</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Discount:</strong></td>
+                                    <td class="text-end">
+                                        <input type="number"
+                                               id="discount"
+                                               class="form-control text-end editable-field"
+                                               value="@ViewBag.Discount"
+                                               step="0.001"
+                                               min="0"
+                                               onchange="calculateRemaining()"
+                                               style="max-width: 200px; display: inline-block;" />
+                                        <span class="print-value" style="display:none;">@ViewBag.Discount</span>
+                                        <span>JOD</span>
+                                    </td>
+                                </tr>
+                                <tr class="table-active">
+                                    <td><strong>Amount To Pay:</strong></td>
+                                    <td class="text-end">
+                                        <strong id="amountToPay">@ViewBag.AmountToPay JOD</strong>
+                                    </td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td><strong>Total Paid:</strong></td>
+                                    <td class="text-end text-success">
+                                        <strong id="totalPaid">@ViewBag.TotalPaid JOD</strong>
+                                    </td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td><strong>Remaining:</strong></td>
+                                    <td class="text-end text-danger">
+                                        <strong id="remaining">@ViewBag.Remain JOD</strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add New Payment Form -->
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-plus-circle"></i> Add New Payment
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="AddPayment" method="post">
+                                <input type="hidden" name="IdInvoice" value="@ViewBag.InvoiceId" />
+                                <input type="hidden" id="discountValue" name="Discount" value="@ViewBag.Discount" />
+
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Type</label>
+                                    <select name="PaidType" class="form-select" required>
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Cash">Cash</option>
+                                        <option value="Credit Card">Credit Card</option>
+                                        <option value="Bank Transfer">Bank Transfer</option>
+                                        <option value="Check">Check</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Amount</label>
+                                    <input type="number"
+                                           name="PaidValue"
+                                           class="form-control"
+                                           step="0.001"
+                                           placeholder="Enter amount"
+                                           required />
+                                    <small class="text-muted">
+                                        Remaining: <span id="remainingSmall">@ViewBag.Remain</span> JOD
+                                    </small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Date</label>
+                                    <input type="datetime-local"
+                                           name="PaidDate"
+                                           class="form-control"
+                                           value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
+                                           required />
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle"></i> Record Payment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Payments History -->
-            <div class="card">
+            <div class="card mt-4" id="printableHistory">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">Payment History</h5>
                 </div>
                 <div class="card-body">
-                    @if (Model != null && Model.Any())
+                    @if (Model != null && Model.Count > 0)
                     {
                         <table class="table table-striped">
                             <thead>
@@ -122,62 +176,32 @@
                 </div>
             </div>
         </div>
-
-        <!-- Add New Payment Form -->
-        <div class="col-md-4">
-            <div class="card bg-light">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-plus-circle"></i> Add New Payment
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form asp-action="AddPayment" method="post">
-                        <input type="hidden" name="IdInvoice" value="@ViewBag.InvoiceId" />
-
-                        <div class="mb-3">
-                            <label class="form-label">Payment Type</label>
-                            <select name="PaidType" class="form-select" required>
-                                <option value="">-- Select Type --</option>
-                                <option value="Cash">Cash</option>
-                                <option value="Credit Card">Credit Card</option>
-                                <option value="Bank Transfer">Bank Transfer</option>
-                                <option value="Check">Check</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Payment Amount</label>
-                            <input type="number"
-                                   name="PaidValue"
-                                   class="form-control"
-                                   step="0.001"
-                                   placeholder="Enter amount"
-                                   required />
-                            <small class="text-muted">
-                                Remaining: @ViewBag.Remain JOD
-                            </small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Payment Date</label>
-                            <input type="datetime-local"
-                                   name="PaidDate"
-                                   class="form-control"
-                                   value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
-                                   required />
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Record Payment
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
+</div>
+
+<!-- جدول خاص بالطباعة فقط -->
+<div id="printableTable" style="display:none;">
+    <h3>Invoice Details - @ViewBag.TreatmentName</h3>
+    <table border="1" cellspacing="0" cellpadding="5" style="width:100%;">
+        <thead>
+            <tr>
+                <th>Invoice Total</th>
+                <th>Discount</th>
+                <th>Amount To Pay</th>
+                <th>Total Paid</th>
+                <th>Remaining</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span id="printInvoiceTotal">@ViewBag.InvoiceTotal</span> JOD</td>
+                <td><span id="printDiscount">@ViewBag.Discount</span> JOD</td>
+                <td><span id="printAmountToPay">@ViewBag.AmountToPay</span> JOD</td>
+                <td><span id="printTotalPaid">@ViewBag.TotalPaid</span> JOD</td>
+                <td><span id="printRemaining">@ViewBag.Remain</span> JOD</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
@@ -187,13 +211,52 @@
         const totalPaidText = document.getElementById('totalPaid').textContent;
         const totalPaid = parseFloat(totalPaidText.replace(/[^0-9.-]/g, '')) || 0;
 
-        // Calculate Amount To Pay
         const amountToPay = invoiceTotal - discount;
         document.getElementById('amountToPay').textContent = amountToPay.toFixed(3) + ' JOD';
 
-        // Calculate Remaining
         const remaining = amountToPay - totalPaid;
         document.getElementById('remaining').textContent = remaining.toFixed(3) + ' JOD';
+
+        // تحديث قيمة الخصم في الـ hidden input للإرسال مع الدفعة
+        document.getElementById('discountValue').value = discount.toFixed(3);
+
+        // تحديث الـ Remaining في النص الصغير
+        document.getElementById('remainingSmall').textContent = remaining.toFixed(3);
+
+        // تحديث قيم الطباعة
+        const printValues = document.querySelectorAll('.print-value');
+        if(printValues.length >= 1) {
+            printValues[0].textContent = discount.toFixed(3);
+        }
+
+        // تحديث جدول الطباعة
+        document.getElementById('printDiscount').textContent = discount.toFixed(3);
+        document.getElementById('printAmountToPay').textContent = amountToPay.toFixed(3);
+        document.getElementById('printRemaining').textContent = remaining.toFixed(3);
+    }
+
+    function printInvoiceTable() {
+        // اخفاء المحتوى العادي
+        document.getElementById('showprint').style.display = 'none';
+
+        // اخفاء الهيدر (layout)
+        const headers = document.getElementsByClassName('header');
+        for (let i = 0; i < headers.length; i++) {
+            headers[i].style.display = 'none';
+        }
+
+        // اظهار جدول الطباعة
+        document.getElementById('printableTable').style.display = 'block';
+
+        window.print();
+
+        // إرجاع الهيدر
+        for (let i = 0; i < headers.length; i++) {
+            headers[i].style.display = 'block';
+        }
+
+        // إرجاع الصفحة
+        document.getElementById('showprint').style.display = 'block';
+        document.getElementById('printableTable').style.display = 'none';
     }
 </script>
-

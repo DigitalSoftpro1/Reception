@@ -15,6 +15,8 @@
         public string? Notes { get; set; }
         public Clinic? Clinic { get; set; }
         public DateTime? CreatedDate { get; set; }
+        public string? PhoneNumber { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

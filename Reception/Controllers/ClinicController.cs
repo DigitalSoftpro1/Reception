@@ -28,7 +28,7 @@ namespace Reception.Controllers
             try
             {
                 var treatments = await _clinicService.GetAllTreatmentClinic(clinicId);
-                return Json(treatments); // سنحول JSON إلى جدول في JS
+                return Json(treatments); 
             }
             catch (Exception ex)
             {

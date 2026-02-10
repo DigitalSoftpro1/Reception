@@ -12,27 +12,68 @@ namespace Reception.Controllers
     public class TransactionVisitController : Controller
     {
         private readonly IServices _service;
-
-        public TransactionVisitController(IServices service)
+        public TransactionVisitController(IServices service )
         {
             _service = service;
-        }
-  
-            public async Task<IActionResult> Visits()
+         }
+
+        [HttpGet]
+        public async Task<IActionResult> Visits(string patientName = null, string phoneNumber = null, DateTime? visitDate = null, int? clinicId = null)
+        {
+            var visits = await _service.GetAllVisit(patientName, phoneNumber, visitDate);
+
+            if (clinicId.HasValue)
             {
-                var visits = await _service.GetAllVisit();
-                var clinics = await _service.GetAllClinics();
-
-                var viewModel = new VisitsViewModel
-                {
-                    Visits = visits ?? new List<Visit>(),
-                    Clinics = clinics ?? new List<Clinic>()
-                };
-
-                return View(viewModel);
+                visits = visits.Where(v => v.ClinicId == clinicId.Value).ToList();
             }
 
-             [HttpPost]
+            var clinics = await _service.GetAllClinics(); 
+
+            ViewBag.Clinics = clinics; 
+            return View(visits);
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetPatientInfo(string search)
+        {
+            if (string.IsNullOrWhiteSpace(search))
+                return Json(new { success = false });
+
+            try
+            {
+                var allVisits = await _service.GetAllVisit();
+
+                var patient = allVisits
+                    .Where(v =>
+                        (!string.IsNullOrEmpty(v.PatientName) &&
+                         v.PatientName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                        ||
+                        (!string.IsNullOrEmpty(v.PhoneNumber) &&
+                         v.PhoneNumber.Contains(search))
+                    )
+                    .OrderByDescending(v => v.VisitDate) 
+                    .FirstOrDefault();
+
+                if (patient == null)
+                {
+                    return Json(new { success = false });
+                }
+
+                return Json(new
+                {
+                    success = true,                 
+                    patientName = patient.PatientName,
+                    phoneNumber = patient.PhoneNumber
+                });
+            }
+            catch
+            {
+                return Json(new { success = false });
+            }
+        }
+
+
+
+        [HttpPost]
             public async Task<IActionResult> AddVisit(AddVisitDto dto)
             {
                 try
@@ -137,6 +178,8 @@ namespace Reception.Controllers
                 return Json(new List<object>());
             }
         }
+
+
 
     }
 }

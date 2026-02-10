@@ -19,11 +19,18 @@
         public DateTime VisitDate { get; set; }
 
         public string? PatientName { set; get; }
+        public string? PhoneNumber { get; set; }
 
         public int ClinicId { get; set; }
         public string? ClinicName { get; set; }
 
         public string? Status { get; set; }
         public string? Notes { get; set; }
+       
+            public List<Visit> Visits { get; set; } = new List<Visit>();
+
+            public List<Clinic> Clinics { get; set; } = new List<Clinic>();
+
     }
+
 }

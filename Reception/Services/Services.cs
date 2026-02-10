@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Reception.Services
 {
@@ -50,10 +51,13 @@ namespace Reception.Services
             if (clinicExists == null)
                 throw new ArgumentException($"Clinic with ID {dto.ClinicId} not found");
 
+
             var visit = new Visit
             {
                 VisitDate = dto.VisitDate,
                 PatientName = dto.PatientName,
+                PhoneNumber = dto.PhoneNumber,
+
                 Status = dto.Status,
                 Notes = dto.Notes,
                 ClinicId = dto.ClinicId,
@@ -108,11 +112,29 @@ namespace Reception.Services
                                  .ToListAsync();
         }
 
-        public async Task<List<Visit>> GetAllVisit()
+        public async Task<List<Visit>> GetAllVisit(string patientName = null, string phoneNumber = null, DateTime? visitDate = null)
         {
-            return await _context.Visits
-                                 .Include(v => v.Clinic)
-                                 .ToListAsync();
+            var query = _context.Visits
+                                .Include(v => v.Clinic)
+                                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(patientName))
+            {
+                query = query.Where(v => v.PatientName.Contains(patientName));
+            }
+
+            if (!string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                query = query.Where(v => v.PhoneNumber.Contains(phoneNumber));
+            }
+
+            if (visitDate.HasValue)
+            {
+                var date = visitDate.Value.Date;
+                query = query.Where(v => v.VisitDate.Date == date);
+            }
+
+            return await query.OrderByDescending(v => v.VisitDate).ToListAsync();
         }
 
         public async Task<List<VisitTreatment>> GetAllVisitTreatment(int visitId)
@@ -187,6 +209,35 @@ public async Task<Invoice> GetOrCreateInvoiceForVisit(int visitId, int treatment
         public async Task<Invoice> GetInvoiceById(int invoiceId)
         {
             return await _context.Invoices.FindAsync(invoiceId);
+        }
+
+        public async Task AddPayment(Payment payment, decimal discount)
+        {
+            // إضافة الدفعة
+            payment.IsActive = true;
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            // تحديث الفاتورة
+            var invoice = await _context.Invoices
+                .Include(i => i.Payments)
+                .FirstOrDefaultAsync(i => i.Id == payment.IdInvoice);
+
+            if (invoice != null)
+            {
+                // تحديث الخصم
+                invoice.Discount = discount;
+
+                // إعادة حساب كل القيم
+                invoice.AmmountToPay = (invoice.InvoiceTotal ?? 0) - (invoice.Discount ?? 0);
+                invoice.TotalPaid = invoice.Payments?
+                    .Where(p => p.IsActive)
+                    .Sum(p => p.PaidValue ?? 0) ?? 0;
+                invoice.Remain = invoice.AmmountToPay - invoice.TotalPaid;
+
+                _context.Invoices.Update(invoice);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

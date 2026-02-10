@@ -13,8 +13,8 @@ namespace Reception.IService
 
         public Task<List<Clinic>> GetAllClinics();
         public Task<List<Treatment>> GetAllTreatmentClinic(int ClinicId);
+        Task<List<Visit>> GetAllVisit(string patientName = null, string phoneNumber = null, DateTime? visitDate = null);
 
-        public Task<List<Visit>> GetAllVisit();
         public Task<List<VisitTreatment>> GetAllVisitTreatment(int visit);
         public  Task<Visit> GetVisitById(int visitId);
 

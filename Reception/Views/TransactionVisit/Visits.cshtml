@@ -1,8 +1,10 @@
-﻿@model Reception.Models.VisitsViewModel
+﻿@model List<Reception.Models.Visit>
 
 @{
     ViewData["Title"] = "Visits";
 }
+
+<h3>Visits</h3>
 
 @if (TempData["Success"] != null)
 {
@@ -19,10 +21,29 @@
     </div>
 }
 
+<form method="get" asp-action="Visits" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <input type="text" class="form-control" name="patientName" placeholder="Search by Patient Name"
+               value="@ViewContext.HttpContext.Request.Query["patientName"]" />
+    </div>
+    <div class="col-md-4">
+        <input type="text" class="form-control" name="phoneNumber" placeholder="Search by Phone Number"
+               value="@ViewContext.HttpContext.Request.Query["phoneNumber"]" />
+    </div>
+    <div class="col-md-4">
+        <input type="date" class="form-control" name="visitDate"
+               value="@ViewContext.HttpContext.Request.Query["visitDate"]" />
+    </div>
+    <div class="col-md-12 mt-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filter</button>
+        <a asp-action="Visits" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">
-            <i class="bi bi-clipboard-check"></i> Visits List (@Model.Visits.Count visits)
+            <i class="bi bi-clipboard-check"></i> Visits List (@Model.Count visits)
         </h4>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVisitModal">
@@ -39,6 +60,7 @@
                         <th>Visit ID</th>
                         <th>Visit Date</th>
                         <th>Patient Name</th>
+                        <th>Phone Number</th>
                         <th>Clinic</th>
                         <th>Status</th>
                         <th>Notes</th>
@@ -46,14 +68,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Visits != null && Model.Visits.Any())
+                    @if (Model != null && Model.Any())
                     {
-                        @foreach (var visit in Model.Visits)
+                        @foreach (var visit in Model)
                         {
                             <tr>
-                                <td>#@visit.Id </td>
+                                <td>#@visit.Id</td>
                                 <td>@visit.VisitDate.ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>@visit.PatientName</td>
+                                <td>@visit.PhoneNumber</td>
                                 <td>@visit.Clinic?.Name</td>
                                 <td>
                                     @if (visit.Status == "Completed")
@@ -93,7 +116,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="7" class="text-center text-muted">No visits found</td>
+                            <td colspan="8" class="text-center text-muted">No visits found</td>
                         </tr>
                     }
                 </tbody>
@@ -101,7 +124,6 @@
         </div>
     </div>
 </div>
-
 
 <div class="modal fade" id="addVisitModal" tabindex="-1">
     <div class="modal-dialog">
@@ -113,28 +135,71 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="PatientName" class="form-label">Patient Name</label>
-                        <input type="text" class="form-control" id="PatientName" name="PatientName" required>
+                    <!-- Search Box -->
+                    <div class="mb-4">
+                        <label for="SearchPatient" class="form-label fw-bold">Search Patient</label>
+                        <div class="input-group input-group-lg w-100">
+                            <input type="text"
+                                   class="form-control"
+                                   id="SearchPatient"
+                                   placeholder="Enter patient name or phone number..."
+                                   autocomplete="off"
+                                   style="width: 100%;">
+                            <button class="btn btn-primary px-4" type="button" onclick="fetchPatientInfo(event)">
+                                Search
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Search by name or phone number to auto-fill patient information
+                        </small>
                     </div>
 
+                    <hr class="mb-3">
+
+                    <!-- Patient Name (Auto-filled or Manual) -->
+                    <div class="mb-3">
+                        <label for="PatientName" class="form-label">Patient Name <span class="text-danger">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               id="PatientName"
+                               name="PatientName"
+                               placeholder="Enter patient name"
+                               required>
+                        <small class="text-muted">Auto-filled from search or enter manually</small>
+                    </div>
+
+                    <!-- Phone Number (Auto-filled or Manual) -->
+                    <div class="mb-3">
+                        <label for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               id="PhoneNumber"
+                               name="PhoneNumber"
+                               placeholder="Enter phone number"
+                               required>
+                        <small class="text-muted">Auto-filled from search or enter manually</small>
+                    </div>
+
+                    <!-- Clinic Selection -->
                     <div class="mb-3">
                         <label for="ClinicId" class="form-label">Clinic</label>
-                        <select class="form-select" id="ClinicId" name="ClinicId" required>
+                        <select class="form-select" id="ClinicId" name="ClinicId">
                             <option value="">-- Select Clinic --</option>
-                            @foreach (var clinic in Model.Clinics)
+                            @foreach (var clinic in ViewBag.Clinics)
                             {
                                 <option value="@clinic.Id">@clinic.Name</option>
                             }
                         </select>
                     </div>
 
+                    <!-- Visit Date -->
                     <div class="mb-3">
                         <label for="VisitDate" class="form-label">Visit Date</label>
                         <input type="datetime-local" class="form-control" id="VisitDate" name="VisitDate"
                                value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required>
                     </div>
 
+                    <!-- Status -->
                     <div class="mb-3">
                         <label for="Status" class="form-label">Status</label>
                         <select class="form-select" id="Status" name="Status" required>
@@ -144,6 +209,7 @@
                         </select>
                     </div>
 
+                    <!-- Notes -->
                     <div class="mb-3">
                         <label for="Notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="Notes" name="Notes" rows="3"></textarea>
@@ -157,6 +223,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="addTreatmentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -166,13 +233,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="VisitId" name="VisitId">
+                    <input type="hidden" id="VisitIdTreatment" name="VisitId">
 
                     <div class="mb-3">
                         <label for="TreatmentClinicId" class="form-label">Select Clinic First</label>
-                        <select class="form-select" id="TreatmentClinicId" onchange="loadTreatmentsForClinic(this.value)">
+                        <select class="form-select" id="TreatmentClinicId" name="ClinicId" onchange="loadTreatmentsForClinic(this.value)" required>
                             <option value="">-- Select Clinic --</option>
-                            @foreach (var clinic in Model.Clinics)
+                            @foreach (var clinic in ViewBag.Clinics)
                             {
                                 <option value="@clinic.Id">@clinic.Name</option>
                             }
@@ -200,8 +267,13 @@
     </div>
 </div>
 
-
 <script>
+
+    function setVisitId(visitId, patientName) {
+        document.getElementById('VisitIdTreatment').value = visitId;
+        document.getElementById('patientNameDisplay').textContent = patientName;
+    }
+
     function loadTreatmentsForClinic(clinicId) {
         const treatmentSelect = document.getElementById('TreatmentId');
 
@@ -219,8 +291,8 @@
 
                 treatments.forEach(treatment => {
                     options += `<option value="${treatment.id}" data-price="${treatment.defaultPrice}">
-                                        ${treatment.name} - $${treatment.defaultPrice ? treatment.defaultPrice.toFixed(2) : '0.00'}
-                                    </option>`;
+                                    ${treatment.name} - ${treatment.defaultPrice ? treatment.defaultPrice.toFixed(3) : '0.000'}
+                                </option>`;
                 });
 
                 treatmentSelect.innerHTML = options;
@@ -229,7 +301,7 @@
                     const selectedOption = this.options[this.selectedIndex];
                     const price = selectedOption.getAttribute('data-price');
                     if (price) {
-                        document.getElementById('PatientPrice').value = parseFloat(price).toFixed(2);
+                        document.getElementById('PatientPrice').value = parseFloat(price).toFixed(3);
                     }
                 };
             })
@@ -239,12 +311,137 @@
             });
     }
 
-    function setVisitId(visitId, patientName) {
-        document.getElementById('VisitId').value = visitId;
-        document.getElementById('patientNameDisplay').textContent = patientName;
-        document.getElementById('TreatmentClinicId').value = '';
-        document.getElementById('TreatmentId').innerHTML = '<option value="">-- Select Clinic First --</option>';
-        document.getElementById('PatientPrice').value = '';
+    function loadClinics() {
+        const clinicSelect = document.getElementById('TreatmentClinicId');
+
+        if (!clinicSelect) return;
+
+        fetch('/TransactionVisit/GetAllClinics')
+            .then(response => response.json())
+            .then(clinics => {
+                let options = '<option value="">-- Select Clinic --</option>';
+
+                clinics.forEach(clinic => {
+                    options += `<option value="${clinic.id}">${clinic.name}</option>`;
+                });
+
+                clinicSelect.innerHTML = options;
+            })
+            .catch(error => {
+                console.error('Error loading clinics:', error);
+            });
     }
 
+
+    function fetchPatientInfo(event) {
+        const searchInput = document.getElementById('SearchPatient');
+        const patientNameInput = document.getElementById('PatientName');
+        const phoneInput = document.getElementById('PhoneNumber');
+        const searchValue = searchInput.value.trim();
+
+        if (!searchValue) {
+            alert('Please enter a name or phone number to search');
+            return;
+        }
+
+        const searchButton = event?.target?.tagName === 'BUTTON'
+            ? event.target
+            : document.querySelector('#SearchPatient + button');
+
+        const originalText = searchButton.innerHTML;
+        searchButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Searching...';
+        searchButton.disabled = true;
+
+        fetch(`/TransactionVisit/GetPatientInfo?search=${encodeURIComponent(searchValue)}`)
+            .then(res => res.json())
+            .then(data => {
+
+                if (data && data.success) {
+                    patientNameInput.value = data.patientName;
+                    phoneInput.value = data.phoneNumber;
+
+                    patientNameInput.readOnly = true;
+                    phoneInput.readOnly = true;
+
+                    showSearchMessage('Patient found and auto-filled ✅', 'success');
+                } else {
+                    resetPatientInputs();
+                    patientNameInput.focus();
+                    showSearchMessage('Patient not found, enter details manually', 'warning');
+                }
+            })
+            .catch(() => {
+                resetPatientInputs();
+                showSearchMessage('Search error, enter details manually', 'danger');
+            })
+            .finally(() => {
+                searchButton.innerHTML = originalText;
+                searchButton.disabled = false;
+            });
+    }
+
+    function resetPatientInputs() {
+        const patientNameInput = document.getElementById('PatientName');
+        const phoneInput = document.getElementById('PhoneNumber');
+
+        patientNameInput.value = '';
+        phoneInput.value = '';
+        patientNameInput.readOnly = false;
+        phoneInput.readOnly = false;
+    }
+
+    function showSearchMessage(message, type) {
+        const existingAlert = document.getElementById('searchAlert');
+        if (existingAlert) existingAlert.remove();
+
+        const alert = document.createElement('div');
+        alert.id = 'searchAlert';
+        alert.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.getElementById('SearchPatient')
+            .closest('.mb-4')
+            .insertAdjacentElement('afterend', alert);
+
+        setTimeout(() => alert.remove(), 5000);
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadClinics();
+
+        const searchInput = document.getElementById('SearchPatient');
+        const addVisitModal = document.getElementById('addVisitModal');
+
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    fetchPatientInfo({ target: document.querySelector('#SearchPatient + button') });
+                }
+            });
+
+            searchInput.addEventListener('input', function () {
+                resetPatientInputs();
+                const alert = document.getElementById('searchAlert');
+                if (alert) alert.remove();
+            });
+        }
+
+        if (addVisitModal) {
+            addVisitModal.addEventListener('hidden.bs.modal', function () {
+                if (searchInput) searchInput.value = '';
+                resetPatientInputs();
+                const alert = document.getElementById('searchAlert');
+                if (alert) alert.remove();
+            });
+
+            addVisitModal.addEventListener('shown.bs.modal', function () {
+                if (searchInput) searchInput.focus();
+            });
+        }
+    });
 </script>

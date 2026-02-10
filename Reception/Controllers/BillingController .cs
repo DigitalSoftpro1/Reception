@@ -4,16 +4,19 @@ using System.Linq;
 using System;
 using Reception.IService;
 using Reception.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Reception.Controllers
 {
     public class BillingController : Controller
     {
         private readonly IBillingServices _invoiceService;
+        private readonly ReceptionDbContext _context;
 
-        public BillingController(IBillingServices context)
+        public BillingController(IBillingServices services, ReceptionDbContext context)
         {
-            _invoiceService = context;
+            _invoiceService = services;
+            _context = context;
         }
 
         [HttpPost]
@@ -31,19 +34,38 @@ namespace Reception.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddPayment(AddPaymentDto dto)
+        public async Task<IActionResult> AddPayment(Payment payment, decimal Discount)
         {
             if (!ModelState.IsValid)
-                return View(dto);
+                return View(payment);
 
-            await _invoiceService.AddPayment(dto);
+            payment.IsActive = true;
 
-            var invoice = await _invoiceService.GetInvoiceById(dto.IdInvoice);
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            var invoice = await _context.Invoices
+                .FirstOrDefaultAsync(i => i.Id == payment.IdInvoice);
+
+            if (invoice != null)
+            {
+                invoice.Discount = Discount;
+
+                invoice.AmmountToPay = (invoice.InvoiceTotal ?? 0) - Discount;
+
+                var payments = await _context.Payments
+                    .Where(p => p.IdInvoice == invoice.Id && p.IsActive)
+                    .ToListAsync();
+                invoice.TotalPaid = payments.Sum(p => p.PaidValue ?? 0);
+
+                invoice.Remain = invoice.AmmountToPay - invoice.TotalPaid;
+
+                _context.Invoices.Update(invoice);
+                await _context.SaveChangesAsync();
+            }
 
             if (invoice == null)
-                return View(dto);
-
-             
+                return RedirectToAction("Index");
 
             return RedirectToAction("Payments", new
             {
@@ -53,10 +75,14 @@ namespace Reception.Controllers
                 price = invoice.InvoiceTotal ?? 0
             });
         }
-
         [HttpPost]
-        public async Task<IActionResult> UpdateInvoiceDetails(int InvoiceId, int VisitId, int TreatmentId,
-                                                               string TreatmentName, decimal InvoiceTotal, decimal Discount)
+        public async Task<IActionResult> UpdateInvoiceDetails(
+        int InvoiceId,
+        int VisitId,
+        int TreatmentId,
+        string TreatmentName,
+        decimal InvoiceTotal,
+        decimal Discount)
         {
             try
             {
@@ -64,15 +90,15 @@ namespace Reception.Controllers
 
                 if (invoice != null)
                 {
-                    // Update invoice details
                     invoice.InvoiceTotal = InvoiceTotal;
                     invoice.Discount = Discount;
-                    invoice.AmmountToPay = InvoiceTotal - Discount;
 
-                    // Recalculate Total Paid and Remaining
-                    decimal totalPaid = invoice.Payments?.Sum(p => p.PaidValue ?? 0) ?? 0;
+                    invoice.AmmountToPay = Math.Max(0m, InvoiceTotal - Discount);
+
+                    decimal totalPaid = invoice.Payments?.Sum(p => p.PaidValue ?? 0m) ?? 0m;
                     invoice.TotalPaid = totalPaid;
-                    invoice.Remain = invoice.AmmountToPay - totalPaid;
+
+                    invoice.Remain = Math.Max(0m, invoice.AmmountToPay.GetValueOrDefault() - totalPaid);
 
                     await _invoiceService.UpdateInvoice(invoice);
                 }
@@ -97,6 +123,20 @@ namespace Reception.Controllers
             }
         }
 
+
+
+
+        public IActionResult Print(int invoiceId)
+        {
+            var invoice = _context.Invoices
+                .Include(i => i.Payments)
+                .FirstOrDefault(i => i.Id == invoiceId);
+
+            if (invoice == null)
+                return NotFound();
+
+            return View(invoice); 
+        }
         public async Task<IActionResult> Payments(int visitId, int treatmentId, string treatmentName, decimal price)
         {
             var invoice = await _invoiceService.GetOrCreateInvoiceForTreatment(visitId, treatmentId, price);
@@ -113,7 +153,7 @@ namespace Reception.Controllers
             ViewBag.Remain = (invoice.Remain ?? 0).ToString("0.000");
 
             return View(payments);
-        
+
         }
     }
 }
