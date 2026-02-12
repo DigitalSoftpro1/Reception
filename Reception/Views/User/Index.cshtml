@@ -1,0 +1,23 @@
+﻿@model IEnumerable<Reception.Models.User>
+@{
+    ViewData["Title"] = "Users List";
+}
+
+<h3>Users</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Can Edit Payment</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Username</td>
+                <td>@(u.CanEditPayment ? "Yes" : "No")</td>
+            </tr>
+        }
+    </tbody>
+</table>

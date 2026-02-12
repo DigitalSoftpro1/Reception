@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Reception.Models;
 using Reception.IService;
 using Reception.Services;
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Services.AddControllersWithViews();
 
@@ -11,15 +13,25 @@ builder.Services.AddDbContext<ReceptionDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
-  builder.Services.AddScoped<IServices, Services>();
+
+builder.Services.AddScoped<IServices, Services>();
 builder.Services.AddScoped<IBillingServices, BillingServices>();
 
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); 
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+
+
 var app = builder.Build();
+
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-     https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -28,13 +40,14 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();        
 app.UseAuthorization();
 
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Clinic}/{action=Index}/{id?}");
-
+    pattern: "{controller=User}/{action=Login}/{id?}" 
+);
 
 
 app.Run();

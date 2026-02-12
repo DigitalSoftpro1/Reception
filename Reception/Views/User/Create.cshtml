@@ -1,0 +1,31 @@
+﻿@model Reception.Models.User
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <h3 class="text-center mb-4">Create User</h3>
+
+            <form asp-action="Create" method="post">
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <input asp-for="Username" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" required />
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="CanEditPayment" class="form-check-input" type="checkbox" />
+                    <label asp-for="CanEditPayment" class="form-check-label">Edit Payment</label>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Create</button>
+            </form>
+        </div>
+    </div>
+</div>

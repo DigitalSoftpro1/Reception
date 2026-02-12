@@ -7,6 +7,7 @@ namespace Reception.Models
         public ReceptionDbContext(DbContextOptions<ReceptionDbContext> options) : base(options)
         {
         }
+        public DbSet<User> Users { get; set; }
 
         public virtual DbSet<Visit> Visits { get; set; }
         
